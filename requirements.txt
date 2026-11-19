@@ -1,0 +1,21 @@
+# Python 3.9 or newer. ffmpeg and Deno are system tools - see START-HERE.md.
+
+# [default] pulls in yt-dlp-ejs, which yt-dlp needs to solve YouTube's JavaScript
+# challenges (together with a JS runtime such as Deno). Keep this package current:
+#   pip install -U "yt-dlp[default]"
+yt-dlp[default]
+
+# automatic captions (speech to text on the CPU; the small model downloads on first use)
+faster-whisper>=1.0.0
+
+# audio-energy detection
+numpy>=1.24
+
+# only used when YT_DELIVERY=api (automatic YouTube upload)
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.2.0
+
+# Pacific-time day boundary for the daily limits (Windows has no system tz database)
+tzdata; sys_platform == "win32"

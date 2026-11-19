@@ -1,0 +1,15 @@
+# ClipForge channel list
+# ---------------------------------------------------------------------------
+# ONLY add channels whose owners told you YES to clips of their videos.
+# Keep their message (email or DM) as proof. Everything listed here is treated as approved.
+#
+# One channel per line. Paste the channel link (like https://www.youtube.com/@name)
+# or just the @name. Anything after a # on a line is your own note.
+# A line that starts with # is ignored, so you can pause a channel by putting # in front of it.
+#
+# Examples (delete the # to use one; these are NOT real approvals):
+# https://www.youtube.com/@ExampleGamer      # said yes by email on 2026-11-20
+# @AnotherGamer
+#
+# Your channels go below this line:
+

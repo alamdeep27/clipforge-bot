@@ -1,0 +1,8 @@
+Poppins Bold (Poppins-Bold.ttf), used for the burned-in captions.
+
+Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+The full license text and FAQ are at: https://openfontlicense.org (also https://scripts.sil.org/OFL).
+You may use, study, copy, merge, embed, modify, redistribute and sell this font as part of
+your software; the font itself may not be sold on its own, and this notice must stay with it.

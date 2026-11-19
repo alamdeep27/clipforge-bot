@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+tmp/
+output/
+state/
+before.sha
+notes.md
+*.db
+*.db-journal
+pipeline.log*
+cron.log
+.pipeline.lock
+client_secret.json
+token.json

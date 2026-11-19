@@ -1,0 +1,149 @@
+name: ClipForge bot
+
+# Runs by itself about every 15 minutes (GitHub may delay it a little).
+# You can also start it by hand: Actions tab -> ClipForge bot -> Run workflow.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: "Tick this to ONLY test whether YouTube lets this cloud computer download videos"
+        type: boolean
+        default: false
+
+# Never run two copies at once.
+concurrency:
+  group: clipforge-bot
+  cancel-in-progress: false
+
+# Needed so finished Shorts can be attached to a GitHub "Release" you can download from.
+permissions:
+  contents: write
+
+env:
+  YT_DB_PATH: state/processed_videos.db
+  YT_MAX_PER_RUN: "3"
+  # Optional settings. Add them under Settings -> Secrets and variables -> Actions.
+  YT_DELIVERY: ${{ vars.YT_DELIVERY || 'files' }}
+  YT_PRIVACY: ${{ vars.YT_PRIVACY || 'public' }}
+  YT_COOKIES_TEXT: ${{ secrets.YT_COOKIES }}
+  YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+  YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+  YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Get the bot's files
+        uses: actions/checkout@v4
+
+      # The bot's memory (which videos it has already seen) is a small file kept in GitHub's cache.
+      - name: Load the bot's memory
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: clipforge-memory-${{ github.run_id }}
+          restore-keys: |
+            clipforge-memory-
+
+      - name: Note what the memory looked like before
+        run: |
+          mkdir -p state
+          if [ -f state/processed_videos.db ]; then sha256sum state/processed_videos.db | cut -d' ' -f1 > before.sha; else echo none > before.sha; fi
+
+      # Fast step (a few seconds, no installs): are there new uploads to clip?
+      - name: Look for new uploads
+        id: poll
+        if: ${{ github.event.inputs.check_only != 'true' }}
+        run: python3 main.py --poll-only
+
+      - name: Decide whether there is work
+        id: decide
+        run: |
+          if [ "${{ github.event.inputs.check_only }}" = "true" ] || [ "${{ steps.poll.outputs.has_work }}" = "true" ]; then
+            echo "heavy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "heavy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Everything below only runs when there is something to do.
+      - name: Set up Python
+        if: steps.decide.outputs.heavy == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install the bot's parts
+        if: steps.decide.outputs.heavy == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Install ffmpeg
+        if: steps.decide.outputs.heavy == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
+      - name: Install Deno
+        if: steps.decide.outputs.heavy == 'true'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Keep the caption model between runs
+        if: steps.decide.outputs.heavy == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-model-v1
+
+      - name: Test the connection to YouTube
+        if: github.event.inputs.check_only == 'true'
+        run: python main.py --check-youtube
+
+      - name: Make the Shorts
+        if: steps.decide.outputs.heavy == 'true' && github.event.inputs.check_only != 'true'
+        run: python main.py --process-only
+
+      - name: Hand over the finished Shorts
+        if: steps.decide.outputs.heavy == 'true' && github.event.inputs.check_only != 'true' && hashFiles('output/ready/*.mp4') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="shorts-$(date -u +%Y%m%d-%H%M)"
+          {
+            echo "Finished Shorts. Download the video files below, then upload them to YouTube."
+            echo "The title and description for each one are written out here, ready to copy."
+            echo
+            for f in output/ready/*.txt; do
+              echo '```'
+              cat "$f"
+              echo '```'
+              echo
+            done
+          } > notes.md
+          gh release create "$TAG" output/ready/*.mp4 --title "New Shorts $TAG" --notes-file notes.md
+          # tidy up: delete releases older than 7 days
+          CUTOFF=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh release list --limit 200 --json tagName,createdAt --jq ".[] | select(.createdAt < \"$CUTOFF\") | .tagName" \
+            | xargs -r -n1 gh release delete --cleanup-tag --yes
+
+      - name: Did the memory change?
+        id: changed
+        if: always()
+        run: |
+          if [ -f state/processed_videos.db ]; then AFTER=$(sha256sum state/processed_videos.db | cut -d' ' -f1); else AFTER=none; fi
+          if [ "$AFTER" != "none" ] && [ "$AFTER" != "$(cat before.sha)" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save the bot's memory
+        if: always() && steps.changed.outputs.changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: clipforge-memory-${{ github.run_id }}-${{ github.run_attempt }}

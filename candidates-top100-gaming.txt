@@ -1,0 +1,111 @@
+# Top 100 gaming channels on YouTube by subscribers (source: vidIQ, stats through Nov 18, 2026)
+# ---------------------------------------------------------------------------------------------
+# THIS FILE IS NOT READ BY THE BOT. It is a list of channels you could ASK for permission.
+# The bot only clips the channels listed in channels.txt.
+#
+# When a creator tells you YES, copy their line into channels.txt and keep their message as proof.
+# Tips: the biggest channels are usually run by networks or companies and rarely say yes to a
+# stranger; smaller creators (100k-1M subscribers) answer far more often. A permission-request
+# message you can copy is at the bottom of START-HERE.md.
+# ---------------------------------------------------------------------------------------------
+
+https://www.youtube.com/@ishowspeed               # #1 IShowSpeed, 62.4M subscribers
+https://www.youtube.com/@mrbeastgaming            # #2 MrBeast Gaming, 62.3M subscribers
+https://www.youtube.com/@mikecrack                # #3 Mikecrack, 58.7M subscribers
+https://www.youtube.com/@juegagerman              # #4 JuegaGerman, 57M subscribers
+https://www.youtube.com/@jessnolimit              # #5 Jess No Limit, 54.6M subscribers
+https://www.youtube.com/@technogamerzofficial     # #6 Techno Gamerz, 53.7M subscribers
+https://www.youtube.com/@fernanfloo               # #7 Fernanfloo, 50.9M subscribers
+https://www.youtube.com/@skibidi                  # #8 skibidi, 47.8M subscribers
+https://www.youtube.com/@totalgaming093           # #9 Total Gaming, 46M subscribers
+https://www.youtube.com/@thedonato                # #10 TheDonato, 43.9M subscribers
+https://www.youtube.com/@lankybox                 # #11 LankyBox, 41.9M subscribers
+https://www.youtube.com/@markiplier               # #12 Markiplier, 39M subscribers
+https://www.youtube.com/@vegetta777               # #13 VEGETTA777, 34.8M subscribers
+https://www.youtube.com/@dream                    # #14 Dream, 34.8M subscribers
+https://www.youtube.com/@bigschoolminecraft       # #15 BigSchool, 32.4M subscribers
+https://www.youtube.com/@soysuco24                # #16 Soy Suco, 31.3M subscribers
+https://www.youtube.com/@jacksepticeye            # #17 jacksepticeye, 31.1M subscribers
+https://www.youtube.com/@invictorgs3              # #18 invictor, 30.3M subscribers
+https://www.youtube.com/@dantdm                   # #19 DanTDM, 29.1M subscribers
+https://www.youtube.com/@ghs707x                  # #20 GH'S, 28.3M subscribers
+https://www.youtube.com/@arabgamesnetwork         # #21 Arab Games Network, 26.9M subscribers
+https://www.youtube.com/@brawlstars               # #22 Brawl Stars, 26.6M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@lyna                     # #23 Lyna, 26.1M subscribers
+https://www.youtube.com/@vanossgaming             # #24 VanossGaming, 26M subscribers
+https://www.youtube.com/@miawaug                  # #25 MiawAug, 26M subscribers
+https://www.youtube.com/@fgteev                   # #26 FGTeeV, 25.7M subscribers
+https://www.youtube.com/@ssundee                  # #27 SSundee, 25.5M subscribers
+https://www.youtube.com/@aphmau                   # #28 Aphmau, 25.4M subscribers
+https://www.youtube.com/@jakefellman              # #29 Jake Fellman, 25.4M subscribers
+https://www.youtube.com/@jazzghost                # #30 Jazzghost, 25.3M subscribers
+https://www.youtube.com/@glentyoutube             # #31 GLENT, 25M subscribers
+https://www.youtube.com/@coryxkenshin             # #32 CoryxKenshin, 24.8M subscribers
+https://www.youtube.com/@chuuymine                # #33 ChuuyMine, 24.7M subscribers
+https://www.youtube.com/@rakibhossainvlogs        # #34 Rakib Hossain, 24.4M subscribers
+https://www.youtube.com/@degoboom                 # #35 DeGoBooM, 24.3M subscribers
+https://www.youtube.com/@cadresplayer             # #36 Cadres, 23.4M subscribers
+https://www.youtube.com/@ninja                    # #37 Ninja, 23.4M subscribers
+https://www.youtube.com/@jelly                    # #38 Jelly, 23.3M subscribers
+https://www.youtube.com/@lazarbeam                # #39 LazarBeam, 23.3M subscribers
+https://www.youtube.com/@minecraft                # #40 Minecraft, 23.3M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@technoblade              # #41 Technoblade, 23.3M subscribers  [the creator passed away in 2022: ask the channel's team]
+https://www.youtube.com/@robinhoodgamer1          # #42 Robin Hood Gamer, 22.7M subscribers
+https://www.youtube.com/@eltrollino               # #43 ElTrollino, 22.3M subscribers
+https://www.youtube.com/@zbingz                   # #44 zbing z., 22.2M subscribers
+https://www.youtube.com/@clashofclans             # #45 Clash of Clans, 21.9M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@xdschool                 # #46 XDSchool, 21.8M subscribers
+https://www.youtube.com/@caylus                   # #47 Caylus, 21.7M subscribers
+https://www.youtube.com/@cookieswirlc             # #48 CookieSwirlC, 21.4M subscribers
+https://www.youtube.com/@banderitax               # #49 BanderitaX, 21M subscribers
+https://www.youtube.com/@windahbasudara           # #50 Windah Basudara, 20.8M subscribers
+https://www.youtube.com/@robleisiutu              # #51 RobleisIUTU, 20.7M subscribers
+https://www.youtube.com/@asgamingsahil            # #52 AS Gaming, 20.7M subscribers
+https://www.youtube.com/@e_mastersensei           # #53 E-MasterSensei, 20.5M subscribers
+https://www.youtube.com/@ign                      # #54 IGN, 20M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@thegrefg                 # #55 TheGrefg, 19.9M subscribers
+https://www.youtube.com/@glebo                    # #56 Glebo, 19.9M subscribers
+https://www.youtube.com/@tondegamer               # #57 Tonde Gamer, 19.8M subscribers
+https://www.youtube.com/@robtopgames              # #58 RobTopGames, 19.8M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@alia                     # #59 Ali-A, 19.7M subscribers
+https://www.youtube.com/@gyangaming               # #60 Gyan Gaming, 19.7M subscribers
+https://www.youtube.com/@gametheory               # #61 The Game Theorists, 19.6M subscribers
+https://www.youtube.com/@mrmarmok                 # #62 Marmok, 19.5M subscribers
+https://www.youtube.com/@fabru_blacutt            # #63 Fabru Blacutt, 19.1M subscribers
+https://www.youtube.com/@pdkfilms                 # #64 PDK Films, 19M subscribers
+https://www.youtube.com/@freefireindiaofficial    # #65 Free Fire India Official, 19M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@winnermax                # #66 WinnerMax, 18.8M subscribers
+https://www.youtube.com/@nitinfreefire            # #67 NITIN FREE FIRE, 18.8M subscribers
+https://www.youtube.com/@thewillyrex              # #68 TheWillyrex, 18.7M subscribers
+https://www.youtube.com/@thebrianmaps             # #69 TheBrianMaps, 18.4M subscribers
+https://www.youtube.com/@penguinz0                # #70 penguinz0, 18.3M subscribers
+https://www.youtube.com/@roxicakegamer            # #71 RoxiCake Gamer, 18.2M subscribers
+https://www.youtube.com/@maizenofficial           # #72 Maizen, 18M subscribers
+https://www.youtube.com/@prestonplayz             # #73 PrestonPlayz, 18M subscribers
+https://www.youtube.com/@trippiesb                # #74 Trippie SB, 17.9M subscribers
+https://www.youtube.com/@desigamers_              # #75 Desi Gamers, 17.8M subscribers
+https://www.youtube.com/@livespeedy               # #76 Live Speedy, 17.7M subscribers
+https://www.youtube.com/@mythpat                  # #77 Mythpat, 17.7M subscribers
+https://www.youtube.com/@mobilelegends5v5moba     # #78 Mobile Legends: Bang Bang, 17.7M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@compot                   # #79 Kompot, 17.6M subscribers
+https://www.youtube.com/@popularmmos              # #80 PopularMMOs, 17.5M subscribers
+https://www.youtube.com/@athosgamer               # #81 Athos, 17.5M subscribers
+https://www.youtube.com/@kuplinovplay             # #82 Kuplinov Play, 17.4M subscribers
+https://www.youtube.com/@kreekcraft               # #83 KreekCraft, 17.4M subscribers
+https://www.youtube.com/@parotter                 # #84 Parotter, 17.4M subscribers
+https://www.youtube.com/@edisonpts                # #85 EdisonPts, 17.3M subscribers
+https://www.youtube.com/@playstation              # #86 PlayStation, 17.3M subscribers  [company/official channel: needs the company's approval]
+https://www.youtube.com/@willyrex                 # #87 Willyrex, 17.3M subscribers
+https://www.youtube.com/@acenix                   # #88 Acenix, 17M subscribers
+https://www.youtube.com/@augustowtf               # #89 augusto wtf, 16.7M subscribers
+https://www.youtube.com/@makiman131               # #90 Makiman131, 16.6M subscribers
+https://www.youtube.com/@oreetv                   # #91 ooreE TV, 16.5M subscribers
+https://www.youtube.com/@lordahmed                # #92 LORD Ahmed, 16.5M subscribers
+https://www.youtube.com/@lokeshgamer              # #93 LOKESH GAMER, 16.5M subscribers
+https://www.youtube.com/@nobrutv                  # #94 NOBRU, 16.5M subscribers
+https://www.youtube.com/@chuyminer                # #95 ChuyMine R, 16.4M subscribers
+https://www.youtube.com/@eeoneguy                 # #96 aewee, 16.4M subscribers
+https://www.youtube.com/@atro55                   # #97 Atro, 16.3M subscribers
+https://www.youtube.com/@typicalgamer             # #98 Typical Gamer, 16.2M subscribers
+https://www.youtube.com/@dylandpros               # #99 Dyland PROS, 16.2M subscribers
+https://www.youtube.com/@leagueoflegends          # #100 League of Legends, 16M subscribers  [company/official channel: needs the company's approval]
