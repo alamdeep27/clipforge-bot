@@ -108,6 +108,18 @@ def set_output(name: str, value: str) -> None:
             fh.write(f"{name}={value}\n")
 
 
+def annotate(level: str, title: str, message: str) -> None:
+    """Put a short message at the top of a GitHub Actions run page (ignored everywhere else)."""
+    if not os.environ.get("GITHUB_ACTIONS"):
+        return
+
+    def escape(text: str, is_property: bool = False) -> str:
+        text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        return text.replace(":", "%3A").replace(",", "%2C") if is_property else text
+
+    print(f"::{level} title={escape(title, True)}::{escape(message)}")
+
+
 def step_summary(markdown: str) -> None:
     target = os.environ.get("GITHUB_STEP_SUMMARY")
     if target:
@@ -171,17 +183,27 @@ def single_instance(path: Path, stale_after: float = 45 * 60):
         path.unlink(missing_ok=True)
 
 
-def load_channels_or_exit(state: State) -> list[Channel]:
-    if not config.CHANNELS_FILE.exists():
-        sys.exit(f"{config.CHANNELS_FILE.name} not found - create it and paste your channel links in")
-    channels, problems = permissions.load_channels(config.CHANNELS_FILE, cache=state)
+def load_channels(state: State) -> list[Channel]:
+    """Read channels.txt. An empty or missing list is not an error: say what to do and carry on."""
+    channels: list[Channel] = []
+    problems: list[str] = []
+    if config.CHANNELS_FILE.exists():
+        channels, problems = permissions.load_channels(config.CHANNELS_FILE, cache=state)
     for problem in problems:
         log.warning("channels list: %s", problem)
+    if problems and channels:
+        annotate("warning", "Some channel links could not be read", "; ".join(problems[:3]))
     if not channels:
-        sys.exit(
-            f"No channels found in {config.CHANNELS_FILE.name}. Open it and paste the link of each channel "
-            "that said yes to clips, one per line."
+        message = (
+            f"No channels to watch yet. Open {config.CHANNELS_FILE.name} and paste the link of each channel that "
+            "said yes to clips, one per line. Until then the bot has nothing to do."
         )
+        if problems:
+            message += " Links that could not be read: " + "; ".join(problems[:3])
+        log.warning(message)
+        annotate("warning", "No channels yet", message)
+        step_summary("### No channels yet\n" + message)
+        return []
     log.info("%d approved channels loaded", len(channels))
     return channels
 
@@ -325,6 +347,8 @@ def attempt(state: State, channel: Channel, vid: str, args, info: dict | None = 
                 "YouTube is refusing to let this computer download videos (%s). Cloud servers are often "
                 "blocked. Run the bot on your own PC instead, or see START-HERE.md, part B.", exc,
             )
+            annotate("error", "YouTube is blocking this computer",
+                     "YouTube refuses downloads from this computer. Cloud servers are often blocked. Run the bot on your own PC (START-HERE.md, Part A).")
             return "blocked"
         if kind == "skip":
             state.mark(vid, "skipped", str(exc))
@@ -520,20 +544,26 @@ def run_single(args, state: State | None, channels: list[Channel]) -> int:
 
 
 def check_youtube() -> int:
-    """Plain-English test of everything the bot needs from the computer it runs on."""
+    """Plain-English test of everything the bot needs from the computer it runs on.
+
+    Lines marked PROBLEM must be fixed. Lines marked NOTE are nice to have and never fail the check.
+    """
     import tempfile
 
-    rows: list[tuple[bool, str]] = []
+    must: list[tuple[bool, str]] = []
+    notes: list[tuple[bool, str]] = []
 
-    rows.append((bool(shutil.which("ffmpeg")), "ffmpeg is installed"))
+    must.append((bool(shutil.which("ffmpeg")), "ffmpeg is installed"))
     js = [r for r in ("deno", "node", "bun", "qjs") if shutil.which(r)]
-    rows.append((bool(js), f"a JavaScript runtime for yt-dlp is installed ({', '.join(js) or 'none found - install Deno'})"))
+    must.append((bool(js), f"a JavaScript runtime for yt-dlp is installed ({', '.join(js) or 'none found - install Deno'})"))
+
     try:
         import captions
+
         cap_ok = captions.filter_available() and captions.whisper_available()
     except Exception:  # noqa: BLE001
         cap_ok = False
-    rows.append((cap_ok, "automatic captions are available (ffmpeg libass + faster-whisper)"))
+    notes.append((cap_ok, "automatic captions are available (ffmpeg libass + faster-whisper). Without them Shorts have no captions"))
 
     try:
         import resolve
@@ -548,10 +578,10 @@ def check_youtube() -> int:
                     readable += 1
                 except Exception:  # noqa: BLE001
                     pass
-            rows.append((
+            notes.append((
                 readable == len(handles),
-                f"channel links in your list can be read ({readable} of {len(handles)} tested; "
-                "if not, paste the UC... channel id instead of the link)",
+                f"channel links in your list can be read from here ({readable} of {len(handles)} tested). "
+                "If not, paste the 24-character UC... channel id instead of the link",
             ))
     except Exception:  # noqa: BLE001
         pass
@@ -559,7 +589,7 @@ def check_youtube() -> int:
     blocked = False
     try:
         ytdlp.fetch_info(TEST_VIDEO, timeout=120)
-        rows.append((True, "YouTube lets this computer look up videos"))
+        must.append((True, "YouTube lets this computer look up videos"))
         with tempfile.TemporaryDirectory() as tmp:
             ytdlp.run(
                 ["-f", "b[height<=360]/worst", "--download-sections", "*0-4", "--quiet", "--no-progress",
@@ -567,23 +597,36 @@ def check_youtube() -> int:
                 timeout=300,
             )
             got = [p for p in Path(tmp).iterdir() if p.is_file() and p.stat().st_size > 1000]
-        rows.append((bool(got), "YouTube lets this computer download video"))
+        must.append((bool(got), "YouTube lets this computer download video"))
     except Exception as exc:  # noqa: BLE001
         blocked = classify(exc) == "blocked"
         if blocked:
-            rows.append((False, "YouTube is BLOCKING this computer (cloud servers often are). Use the bot on your own PC."))
+            must.append((False, "YouTube is BLOCKING this computer (it does this to many cloud servers)"))
         else:
-            rows.append((False, f"could not talk to YouTube: {exc}"))
+            must.append((False, f"could not talk to YouTube: {str(exc)[:300]}"))
 
-    ok = all(good for good, _ in rows)
-    for good, text in rows:
+    ok = all(good for good, _ in must)
+    if ok:
+        verdict = "RESULT: this computer CAN run the bot."
+    elif blocked:
+        verdict = (
+            "RESULT: YouTube is blocking this computer. Nothing is wrong with your setup: YouTube refuses "
+            "downloads from many cloud servers. Run the bot on your own PC instead (START-HERE.md, Part A)."
+        )
+    else:
+        verdict = "RESULT: not ready. Fix the lines marked PROBLEM first."
+
+    for good, text in must:
         print(f"[{'OK' if good else 'PROBLEM'}] {text}")
-    print("\nAll good - this computer can run the bot." if ok else "\nSomething above needs fixing before this computer can run the bot.")
+    for good, text in notes:
+        print(f"[{'OK' if good else 'NOTE'}] {text}")
+    print("\n" + verdict)
 
-    md = ["### ClipForge check", ""] + [f"- {'✅' if good else '❌'} {text}" for good, text in rows]
-    md.append("")
-    md.append("**Result: this cloud computer can run the bot.**" if ok else (
-        "**Result: not ready.** If YouTube is blocking it, run the bot on your own PC (START-HERE.md, part A)."))
+    annotate("notice" if ok else "error", "ClipForge check", verdict)
+    md = ["### ClipForge check", ""]
+    md += [f"- {'✅' if good else '❌'} {text}" for good, text in must]
+    md += [f"- {'✅' if good else 'ℹ️'} {text}" for good, text in notes]
+    md += ["", f"**{verdict}**"]
     step_summary("\n".join(md))
     return 0 if ok else 1
 
@@ -677,7 +720,11 @@ def main(argv=None) -> int:
             state.close()
             return code
 
-        channels = load_channels_or_exit(state)
+        channels = load_channels(state)
+        if not channels:
+            set_output("has_work", "false")
+            state.close()
+            return 0
         if args.dry_run:
             poll_and_register(state, channels, seed_only=False, dry_run=True)
             state.close()

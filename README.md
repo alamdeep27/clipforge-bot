@@ -64,6 +64,8 @@ PATH=/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/home/you/.deno/bin
 
 `.github/workflows/shorts.yml` runs about every 15 minutes. A fast first step (`--poll-only`, standard library only, no installs) checks for new uploads; only when there is something to clip does it install Python packages, ffmpeg and Deno, make the Shorts, attach them to a GitHub Release and delete releases older than 7 days. The bot's memory (`state/processed_videos.db`) lives in GitHub's cache; if it is ever lost the bot simply re-seeds and does not re-clip old videos. Public repositories get unlimited free Actions minutes on standard runners; private free accounts get 2,000 minutes a month, so use an hourly schedule there.
 
+Every run explains itself: the first step checks the uploaded files, important problems appear as messages at the top of the run page, and the last step writes a plain-English summary table. An empty `channels.txt` is a warning, not a failure; `--check-youtube` only fails for real requirements (ffmpeg, a JavaScript runtime, YouTube access) and treats captions and unreadable channel links as notes.
+
 Optional repository secrets/variables (Settings > Secrets and variables > Actions): secret `YT_COOKIES` (Netscape cookies text, for the "sign in to confirm you're not a bot" case; use a throwaway Google account), variable `YT_DELIVERY` (`files` or `api`), variable `YT_PRIVACY`, secrets `YT_CLIENT_ID`, `YT_CLIENT_SECRET`, `YT_REFRESH_TOKEN` (api delivery). Keep the cloud and a home PC from running at the same time.
 
 ## Settings (environment variables)

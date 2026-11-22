@@ -40,6 +40,23 @@ jobs:
       - name: Get the bot's files
         uses: actions/checkout@v4
 
+      # First, make sure the files were uploaded the right way. This is the most common problem.
+      - name: Check the uploaded files
+        id: files
+        run: |
+          missing=""
+          for f in main.py requirements.txt channels.txt learner.py captions.py resolve.py; do
+            [ -f "$f" ] || missing="$missing $f"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Files are missing::These files are not at the top of your repository:$missing. Open the Code tab: the bot's files (main.py and the others) must be listed directly there, not inside another folder. Upload them again."
+            exit 1
+          fi
+          count=$(grep -v '^[[:space:]]*#' channels.txt | grep -c '[^[:space:]]' || true)
+          if [ "${count:-0}" -eq 0 ]; then
+            echo "::warning title=No channels yet::channels.txt has no channels. Open it on GitHub (pencil icon) and paste the links of channels that said yes."
+          fi
+
       # The bot's memory (which videos it has already seen) is a small file kept in GitHub's cache.
       - name: Load the bot's memory
         uses: actions/cache/restore@v4
@@ -78,8 +95,15 @@ jobs:
           cache: pip
 
       - name: Install the bot's parts
+        id: install
         if: steps.decide.outputs.heavy == 'true'
-        run: pip install -r requirements.txt
+        run: |
+          if [ "${{ github.event.inputs.check_only }}" = "true" ]; then
+            # the quick test only needs the downloader
+            pip install "yt-dlp[default]" || { echo "::error title=Installing failed::Could not install the downloader. Run the workflow again. If it fails again, copy the last red lines of this step and show them to Claude."; exit 1; }
+          else
+            pip install -r requirements.txt || { echo "::error title=Installing failed::Could not install the bot's parts. Run the workflow again. If it fails again, copy the last red lines of this step and show them to Claude."; exit 1; }
+          fi
 
       - name: Install ffmpeg
         if: steps.decide.outputs.heavy == 'true'
@@ -92,17 +116,19 @@ jobs:
           deno-version: v2.x
 
       - name: Keep the caption model between runs
-        if: steps.decide.outputs.heavy == 'true'
+        if: steps.decide.outputs.heavy == 'true' && github.event.inputs.check_only != 'true'
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
           key: whisper-model-v1
 
       - name: Test the connection to YouTube
+        id: check
         if: github.event.inputs.check_only == 'true'
         run: python main.py --check-youtube
 
       - name: Make the Shorts
+        id: make
         if: steps.decide.outputs.heavy == 'true' && github.event.inputs.check_only != 'true'
         run: python main.py --process-only
 
@@ -114,7 +140,7 @@ jobs:
           set -e
           TAG="shorts-$(date -u +%Y%m%d-%H%M)"
           {
-            echo "Finished Shorts. Download the video files below, then upload them to YouTube."
+            echo "Finished Shorts. Download the video files here, then upload them to YouTube."
             echo "The title and description for each one are written out here, ready to copy."
             echo
             for f in output/ready/*.txt; do
@@ -135,7 +161,7 @@ jobs:
         if: always()
         run: |
           if [ -f state/processed_videos.db ]; then AFTER=$(sha256sum state/processed_videos.db | cut -d' ' -f1); else AFTER=none; fi
-          if [ "$AFTER" != "none" ] && [ "$AFTER" != "$(cat before.sha)" ]; then
+          if [ "$AFTER" != "none" ] && [ "$AFTER" != "$(cat before.sha 2>/dev/null)" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -147,3 +173,37 @@ jobs:
         with:
           path: state
           key: clipforge-memory-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # Always last: say in plain words what happened (shown at the top of the run page).
+      - name: Explain the result in plain words
+        if: always()
+        run: |
+          {
+            echo "### What happened in this run"
+            echo
+            echo "| Step | Result |"
+            echo "|---|---|"
+            echo "| Check the uploaded files | ${{ steps.files.outcome }} |"
+            echo "| Look for new uploads | ${{ steps.poll.outcome }} |"
+            echo "| Install the bot's parts | ${{ steps.install.outcome }} |"
+            echo "| Test the connection to YouTube | ${{ steps.check.outcome }} |"
+            echo "| Make the Shorts | ${{ steps.make.outcome }} |"
+            echo
+            echo "_success = worked, skipped = not needed this time, failure = open that red step._"
+            if [ "${{ steps.files.outcome }}" = "failure" ]; then
+              echo
+              echo "**The bot's files are missing from your repository.** Upload them again (START-HERE.md, Part B, step 3)."
+            fi
+            if [ "${{ steps.install.outcome }}" = "failure" ]; then
+              echo
+              echo "**Installing failed.** Run the workflow again. If it fails again, copy the last red lines of that step and show them to Claude."
+            fi
+            if [ "${{ steps.check.outcome }}" = "failure" ]; then
+              echo
+              echo "**The YouTube test failed.** The ClipForge check list above says why. If it says YouTube is BLOCKING this computer, the cloud will not work for you: use the bot on your own PC (START-HERE.md, Part A)."
+            fi
+            if [ "${{ steps.make.outcome }}" = "failure" ]; then
+              echo
+              echo "**Making the Shorts failed.** Open that red step and show the last red lines to Claude."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

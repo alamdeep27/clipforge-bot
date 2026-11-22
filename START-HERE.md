@@ -76,12 +76,27 @@ Do this only if you want it to work while your computer is off. **Use the cloud 
 
 **Step 2.** Click the **+** at the top right, then **New repository**. Name it `clipforge-bot`. Choose **Public** (public gets unlimited free run time; anyone can see your channel list and the finished clips). Click **Create repository**.
 
-**Step 3. Upload the bot.** Click **uploading an existing file**. Open the unzipped bot folder on your computer, press **Ctrl+A** to select everything, and drag it onto the GitHub page. Wait for the upload bar, then click **Commit changes**.
-- If the folder named `.github` did not upload, click **Add file > Create new file**. In the name box type `.github/workflows/shorts.yml`. Open `shorts-workflow.yml` from the bot folder in Notepad, copy everything, paste it in the big box, click **Commit changes**.
+**Step 3. Upload the bot.** Click **uploading an existing file**. Open the unzipped bot folder on your computer, press **Ctrl+A** to select everything, and drag it onto the GitHub page. Wait for the upload bar, then click **Commit changes**. When it finishes, the repository page must list `main.py`, `channels.txt` and the other files directly (not inside another folder).
+
+**Step 3b. Create the workflow file (always do this).** Browsers usually skip folders whose name starts with a dot, so the `.github` folder normally does NOT upload. Do this instead:
+1. On the repository page click **Add file**, then **Create new file**.
+2. In the "Name your file..." box type exactly `.github/workflows/shorts.yml` (when you type each `/`, GitHub turns the word before it into a folder).
+3. On your computer open `shorts-workflow.yml` from the bot folder with Notepad. Press **Ctrl+A**, then **Ctrl+C**.
+4. Click the big text box on GitHub and press **Ctrl+V**.
+5. Click the green **Commit changes...** button, then **Commit changes** again.
 
 **Step 4. Add your channels.** In GitHub click **channels.txt**, click the pencil icon, paste your channel links under the last line, click **Commit changes**.
 
-**Step 5. Test whether YouTube allows the cloud.** Click the **Actions** tab. If you see a green button that says "I understand my workflows, go ahead and enable them", click it. Click **ClipForge bot** on the left, click **Run workflow**, **tick the box** that says "Tick this to ONLY test...", and click the green **Run workflow** button. Wait about 3 minutes, refresh, and click the run.
+**Step 5. Test whether YouTube allows the cloud.** Click the **Actions** tab. On the left you should now see **ClipForge bot**. Click it. (If instead you see "Get started with GitHub Actions" and a list of templates like "Python application", the workflow file is missing: go back to step 3b. You do not need the green "I understand my workflows" button; it only shows up in some situations.) On the ClipForge bot page click **Run workflow** (a button with a small arrow, on the right), **tick the box** that says "Tick this to ONLY test...", and click the green **Run workflow** button. Wait about 3 minutes, refresh, and click the run.
+**How to read the result.** Click the run. At the top of the page you see short messages, and below them a "What happened in this run" table. The ClipForge check list (with check marks and crosses) is in the summary too.
+
+| What you see | What it means | What to do |
+|---|---|---|
+| "Files are missing" (red) | the bot's files are not at the top of your repository | upload them again (step 3) |
+| "No channels yet" (yellow) | `channels.txt` is empty | paste channel links into it (step 4) |
+| "YouTube is blocking this computer" (red) | YouTube refuses downloads from GitHub's computers. This is not your mistake | use the bot on your own PC (Part A) |
+| "Installing failed" (red) | a download hiccup | run it again once; if it fails again, show me the last red lines |
+
 - Green with a list of check marks: the cloud works. Switch off the bot on your computer (double-click `STOP-BOT.bat`). The bot will now run about every 15 minutes in the cloud.
 - Red and it says YouTube is BLOCKING: the cloud does not work for you. Stay with Part A. You lose nothing.
 

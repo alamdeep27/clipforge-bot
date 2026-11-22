@@ -770,26 +770,121 @@ def t_flow(tmp: Path) -> str:
     return "seed -> queue -> clip -> ready files / upload -> retries -> YouTube block -> daily limit"
 
 
-def t_check_youtube() -> str:
-    import main as pipeline
-    import ytdlp
-
+def t_check_youtube(tmp: Path) -> str:
+    """The cloud test must say clearly what is wrong, and only fail for real requirements."""
     import contextlib
     import io
 
-    saved = (ytdlp.fetch_info, ytdlp.run)
-    quiet = io.StringIO()
+    import main as pipeline
+    import resolve
+    import ytdlp
+
+    def fake_which(name):
+        return f"/usr/bin/{name}" if name in present else None
+
+    def fake_run(args, timeout):
+        template = args[args.index("-o") + 1]
+        Path(template.replace("%(ext)s", "mp4")).write_bytes(b"x" * 5000)
+
+    def run_check(env_github: bool = False):
+        out = io.StringIO()
+        old = os.environ.get("GITHUB_ACTIONS")
+        if env_github:
+            os.environ["GITHUB_ACTIONS"] = "true"
+        try:
+            with contextlib.redirect_stdout(out):
+                code = pipeline.check_youtube()
+        finally:
+            os.environ.pop("GITHUB_ACTIONS", None)
+            if old is not None:
+                os.environ["GITHUB_ACTIONS"] = old
+        return code, out.getvalue()
+
+    saved = (shutil.which, ytdlp.fetch_info, ytdlp.run, resolve.resolve_channel, config.CHANNELS_FILE)
+    present = {"ffmpeg", "deno"}
     try:
-        with contextlib.redirect_stdout(quiet):
-            ytdlp.fetch_info = lambda *a, **k: {"id": "x"}
-            ytdlp.run = lambda args, timeout: (_ for _ in ()).throw(ytdlp.YtDlpError("Sign in to confirm you're not a bot"))
-            assert pipeline.check_youtube() == 1                              # blocked -> clear failure
-            assert "BLOCKING" in quiet.getvalue(), quiet.getvalue()
-            ytdlp.fetch_info = lambda *a, **k: (_ for _ in ()).throw(ytdlp.YtDlpError("ERROR: HTTP Error 429"))
-            assert pipeline.check_youtube() == 1
+        shutil.which = fake_which
+        ytdlp.fetch_info = lambda *a, **k: {"id": "x"}
+        ytdlp.run = fake_run
+        config.CHANNELS_FILE = tmp / "check-channels.txt"
+        config.CHANNELS_FILE.write_text("@SomeGamer\n")
+        resolve.resolve_channel = lambda ref: (_ for _ in ()).throw(resolve.ResolveError("consent page"))
+
+        code, text = run_check(env_github=True)
+        assert code == 0, text                                   # unreadable channel links are only a NOTE
+        assert "[NOTE]" in text and "CAN run the bot" in text and "::notice title=ClipForge check::" in text, text
+
+        ytdlp.run = lambda args, timeout: (_ for _ in ()).throw(ytdlp.YtDlpError("Sign in to confirm you're not a bot"))
+        code, text = run_check(env_github=True)
+        assert code == 1 and "BLOCKING" in text and "Nothing is wrong with your setup" in text, text
+        assert "::error title=ClipForge check::" in text and "%0A" not in text.split("::error")[1].split("\n")[0], text
+
+        ytdlp.fetch_info = lambda *a, **k: (_ for _ in ()).throw(ytdlp.YtDlpError("ERROR: HTTP Error 429"))
+        code, text = run_check()
+        assert code == 1 and "could not talk to YouTube" in text and "BLOCKING" not in text, text
+
+        present.discard("ffmpeg")
+        ytdlp.fetch_info = lambda *a, **k: {"id": "x"}
+        ytdlp.run = fake_run
+        code, text = run_check()
+        assert code == 1 and "[PROBLEM] ffmpeg" in text, text
     finally:
-        ytdlp.fetch_info, ytdlp.run = saved
-    return "a blocked or failing YouTube connection is reported clearly"
+        shutil.which, ytdlp.fetch_info, ytdlp.run, resolve.resolve_channel, config.CHANNELS_FILE = saved
+    return "OK / blocked / other failure / missing tool are told apart; optional things never fail it"
+
+
+def t_no_channels(tmp: Path) -> str:
+    """An empty channel list must give a friendly message and a green run, not a red cross."""
+    import contextlib
+    import io
+
+    import main as pipeline
+
+    saved = (config.CHANNELS_FILE, config.DB_PATH, config.TMP_DIR, config.LOG_FILE)
+    gh_out, summary = tmp / "empty_out.txt", tmp / "empty_summary.md"
+    gh_out.write_text(""); summary.write_text("")
+    try:
+        config.CHANNELS_FILE = tmp / "empty-channels.txt"
+        config.CHANNELS_FILE.write_text("# nothing here yet\n\n")
+        config.DB_PATH, config.TMP_DIR, config.LOG_FILE = tmp / "empty.db", tmp / "empty-tmp", tmp / "empty.log"
+        os.environ.update(GITHUB_OUTPUT=str(gh_out), GITHUB_STEP_SUMMARY=str(summary), GITHUB_ACTIONS="true")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = pipeline.main(["--poll-only"])
+            code_normal = pipeline.main([])
+        assert code == 0 and code_normal == 0, (code, code_normal)
+        assert "has_work=false" in gh_out.read_text()
+        assert "No channels yet" in summary.read_text() and "::warning title=No channels yet::" in out.getvalue()
+        config.CHANNELS_FILE.unlink()                                   # no channels.txt at all: same friendly result
+        with contextlib.redirect_stdout(io.StringIO()):
+            assert pipeline.main(["--poll-only"]) == 0
+    finally:
+        for key in ("GITHUB_OUTPUT", "GITHUB_STEP_SUMMARY", "GITHUB_ACTIONS"):
+            os.environ.pop(key, None)
+        config.CHANNELS_FILE, config.DB_PATH, config.TMP_DIR, config.LOG_FILE = saved
+        logging.disable(logging.CRITICAL)
+    return "no channels yet -> warning at the top of the run page, run stays green"
+
+
+def t_annotate() -> str:
+    import contextlib
+    import io
+
+    import main as pipeline
+
+    out = io.StringIO()
+    os.environ.pop("GITHUB_ACTIONS", None)
+    with contextlib.redirect_stdout(out):
+        pipeline.annotate("error", "t", "m")
+    assert out.getvalue() == "", "annotations must stay silent outside GitHub"
+    os.environ["GITHUB_ACTIONS"] = "true"
+    try:
+        with contextlib.redirect_stdout(out):
+            pipeline.annotate("warning", "Title: with, odd chars", "50% done\nsecond line")
+    finally:
+        os.environ.pop("GITHUB_ACTIONS", None)
+    assert out.getvalue().strip() == "::warning title=Title%3A with%2C odd chars::50%25 done%0Asecond line", out.getvalue()
+    return "GitHub run-page messages are escaped correctly and silent elsewhere"
 
 
 def t_cookies(tmp: Path) -> str:
@@ -910,7 +1005,9 @@ def main() -> int:
         check("learning: report and best posting hour", lambda: t_hours_and_report(tmp))
         check("learning: clips stored with their choices", lambda: t_clip_record(tmp))
         check("run loop with fakes", lambda: t_flow(tmp))
-        check("YouTube connection check", t_check_youtube)
+        check("YouTube connection check", lambda: t_check_youtube(tmp))
+        check("empty channel list is not a failure", lambda: t_no_channels(tmp))
+        check("run-page messages", t_annotate)
         check("cookies secret", lambda: t_cookies(tmp))
         check("single-instance lock", lambda: t_lock(tmp))
         check("yt-dlp self-update", lambda: t_auto_update(tmp))
